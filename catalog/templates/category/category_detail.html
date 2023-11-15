@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>category Detail</title>
+</head>
+
+<body>
+    <p> category Name: {{ category.name }} | <a href="{% url 'catalog:category_update' category.id %}">Update</a> |
+        <a href="{% url 'catalog:category_delete' category.id %}">Delete</a>
+    </p>
+    <p> <a href="{% url 'catalog:category_list' %}">View All categories</a> |
+        <a href="{% url 'catalog:category_create'%}">New category</a>
+    </p>
+</body>
+
+</html>

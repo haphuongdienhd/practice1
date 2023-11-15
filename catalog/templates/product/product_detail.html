@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>product Detail</title>
+</head>
+
+<body>
+    <p> product Name: {{ product.name }} | <a href="{% url 'catalog:product_update' product.id %}">Update</a> |
+        <a href="{% url 'catalog:product_delete' product.id %}">Delete</a>
+    </p>
+    <p>
+        product Thumnail: {{ product.thumnail }}
+    </p>
+    <p>
+        <a href="{% url 'catalog:image_upload' product.id %}">Add Image</a>
+    </p>
+    <p>
+        <a href="{% url 'catalog:comment_list' product.id %}">View Comment</a>
+        <a href="{% url 'catalog:comment_form' product.id %}">Add Comment</a>
+    </p>
+    <img src="{{ product.image.url }}">
+    <p> <a href="{% url 'catalog:product_list' %}">View All products</a> |
+        <a href="{% url 'catalog:product_create'%}">New product</a>
+    </p>
+</body>
+
+</html>
