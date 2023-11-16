@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django.contrib.auth.models import User
 
 
@@ -9,6 +10,9 @@ class Category(models.Model):
     
     def __str__(self):
         return str(self.name)
+    
+    def get_absolute_url(self):
+        return reverse('catalog:category_list')
     
     
 class Product(models.Model):
