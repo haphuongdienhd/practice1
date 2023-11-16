@@ -8,7 +8,7 @@
 
 <body>
     <h3>product List</h3>
-    {% for product in page_obj %}
+    {% for product in results %}
     <p>{{ forloop.counter }}. {{ product.name }} - {{ product.thumnail }} (
         <a href="{% url 'catalog:product_detail' product.id %}">View</a> |
         <a href="{% url 'catalog:product_update' product.id %}">Update</a> |
@@ -20,16 +20,18 @@
 
     <div class="pagination">
         <span class="step-links">
-            {% if page_obj.has_previous %}
+            {% if previous %}
                 <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                <a href="{{ previous }}">previous</a>
             {% endif %}
     
             <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-            </span> {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}">next</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a> {% endif %}
+                Page {{ page }} of {{ total }}.
+            </span>
+                {% if next %}
+                <a href="{{ next }}">next</a>
+                <a href="?page={{ total }}">last &raquo;</a>
+                {% endif %}
         </span>
     </div>
 </body>
