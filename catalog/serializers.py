@@ -4,17 +4,17 @@ from rest_framework import status
 from rest_framework.response import Response
 
 class CategorySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=True)
+    name = serializers.CharField(required=False)    
     
     class Meta:
         model = Category
-        fields = ['id','name','image']
-        
+        fields = '__all__'
+                        
     def create(self, validated_data):
         print('validated_data', validated_data)
         category = Category.objects.create(name=validated_data['name'])
         if 'parent' in validated_data:
-            category.parent = Category.objects.get(name=validated_data['parent'])
+            category.parent = Category.objects.get(id=validated_data['parent'])
         return category
         
 class ProductCategorySerializer(serializers.ModelSerializer):
@@ -25,18 +25,21 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class ProductSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=True)
+    name = serializers.CharField(required=False)
+    category = CategorySerializer(many=True,required=False)
     
     class Meta:
         model = Product
         fields = "__all__"
         
+        
     def create(self, validated_data):
         print('validated_data', validated_data)
         product = Product.objects.create(name=validated_data['name'])
-        for cate in validated_data.pop('category'):
-            category = Category.objects.get(name=cate['name'])
-            ProductCategory.objects.create(product=product, category=category)
+        if 'category' in validated_data:
+            for cate in validated_data.pop('category'):
+                category = Category.objects.get(name=cate['name'])
+                ProductCategory.objects.create(product=product, category=category)
         return product
     
     def update(self, instance, validated_data): 
