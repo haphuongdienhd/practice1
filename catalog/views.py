@@ -10,7 +10,9 @@ from django.views import generic
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+
+from practice1.pagination import CustomPagination
 
 from .models import Category, Product, Comment, ProductCategory, ProductImage
 from .forms import CommentForm, ImageForm, ProductForm, CategoryForm
@@ -19,7 +21,7 @@ from .serializers import ProductSerializer, CategorySerializer
 # Create your views here.
 
 # Sub Function
-# Find by ID
+
 def find_product_by_id(id):
     
     try:
@@ -46,8 +48,7 @@ def find_category_by_name(name):
     try:
         return Category.objects.get(name=name)
     except Category.DoesNotExist:
-        return None
-    
+        return None    
 
 # Create a product
 @login_required(login_url='/account/login/')
@@ -160,20 +161,27 @@ def category_delete(request, pk):
 class ProductListApiView(generics.ListAPIView):
     serializer_class = ProductSerializer
     queryset = Product.objects.all().order_by('-id')
-    pagination_class = PageNumberPagination
+    # renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    # template_name = 'product/product_list.html'
+    pagination = CustomPagination()
     
     # 1. List all    
     def get(self, request, *args, **kwargs):
         # print("stillALIE", request.user.auth_token)
-        products = Product.objects.all().order_by('-id')
-        if request.GET.get('page'):
-            pagination = PageNumberPagination()
-            page = pagination.paginate_queryset(products, request)
-            serializer = ProductSerializer(page, many=True)
-        else:
-            serializer = ProductSerializer(products, many=True)
+        products = Product.objects.all().order_by('-id').prefetch_related('category')
+        if not request.GET.get('page'):
+        
+            # print("else")
+            if not request.GET._mutable:
+                request.GET._mutable = True
+
+            # now you can edit it
+            request.GET['page'] = 1
             
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        page = self.pagination.paginate_queryset(products, request)
+        serializer = ProductSerializer(page, many=True)
+            
+        return self.pagination.get_paginated_response(data=serializer.data)
     
     
     def post(self, request, *args, **kwargs):
@@ -184,15 +192,15 @@ class ProductListApiView(generics.ListAPIView):
                 {"message": f"Product with name {request.data['name']} already exists"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        if 'category' in request.data:
+            for category in request.data['category']:
+                if not find_category_by_name(category['name']):
+                    return Response(
+                    {"message": f"Category with name {category['name']} does not exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
             
-        for category in request.data['category']:
-            if not find_category_by_name(category['name']):
-                return Response(
-                {"message": f"Category with name {category['name']} does not exist"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-            
-        serializer = ProductSerializer(data=request.data)
+        serializer = ProductSerializer(data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -256,38 +264,45 @@ class ProductDetailApiView(generics.ListAPIView):
 class CategoryListApiView(generics.ListAPIView):
     serializer_class = CategorySerializer
     queryset = Category.objects.all().order_by('-id')
-
+    # renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    # template_name = 'category/category_list.html'
+    pagination = CustomPagination()
+    
     # 1. List all
     def get(self, request, *args, **kwargs):
         categories = Category.objects.all().order_by('-id')
         
-        if request.GET.get('page'):
-            pagination = PageNumberPagination()
-            page = pagination.paginate_queryset(categories, request)
-            serializer = CategorySerializer(page, many=True)
-            data = serializer.data
-        else:
-            serializer = CategorySerializer(categories, many=True)
-            data = serializer.data
+        if not request.GET.get('page'):
+            # print("else")
+            if not request.GET._mutable:
+                request.GET._mutable = True
+
+            # now you can edit it
+            request.GET['page'] = 1
             
-        return Response(data, status=status.HTTP_200_OK)
+        page = self.pagination.paginate_queryset(categories, request)
+        # print(page)
+        serializer = CategorySerializer(page, many=True)
+        data = serializer.data
+            
+        return self.pagination.get_paginated_response(data=data)
     
     # 2. Create
     def post(self, request, *args, **kwargs):
-        print(request.data)
+        # print(request.data)
         if find_category_by_name(request.data['name']):
             return Response(
                 {"message": f"Category with name {request.data['name']} already exists"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
             
-        if 'parent' in request.data and not find_category_by_name(request.data['parent']):
+        if 'parent' in request.data and not find_category_by_id(request.data['parent']):
             return Response(
-                {"message": f"Category with name {request.data['parent']} does not exist"}, 
+                {"message": f"Category with id {request.data['parent']} does not exist"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        serializer = CategorySerializer(data=request.data)
+        serializer = CategorySerializer(data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
