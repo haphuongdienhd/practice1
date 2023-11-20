@@ -29,7 +29,7 @@ urlpatterns = [
     # Comment on Product
     re_path(r'^products/(?P<pk>\d+)/comments/create$', views.create_comment, name='comment_form'),
     re_path(r'^products/(?P<pk>\d+)/comments/$', views.comment_list, name='comment_list'),
-    re_path(r'^api/comments-per-product/(?P<pk>\d+)$', views.CommentPerProduct.as_view(), name='comment_per_product'),
+    re_path(r'^api/comments-per-product/$', views.CommentPerProduct.as_view(), name='comment_per_product'),
     
     # Create a category
     path('categories/create/', views.category_create, name='category_create'),
@@ -60,6 +60,6 @@ urlpatterns = [
     path('api/categories/<int:pk>/', views.CategoryDetailApiView.as_view(), name="api_category_detail"),
     
     # Product per category
-    path('api/products-per-category/<int:pk>/', views.ProductPerCateApiView.as_view(), name='product_per_cate'),
+    path('api/products-per-category/', views.ProductPerCateApiView.as_view(), name='product_per_cate'),
     
 ]
