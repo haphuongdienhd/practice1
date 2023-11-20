@@ -53,9 +53,9 @@ def send_mail_to_admins_func(self):
     # print("user", users)
     for user in users:
         mail_subject="List users sign up today"
-        message="List users sign up today\n"
+        message="List users sign up today:\n"
         for usu in user_signed_up:
-            message += str(usu.username) + ', ' + str(usu.email) + '\n'
+            message += f"""username: {usu.username}, email: {usu.email}, had signed up at: {usu.date_joined} \n"""
         to_email=user.email
         send_mail(
             subject=mail_subject,
