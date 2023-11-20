@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 MY_APPS = [
     'user.apps.UserConfig',
     'catalog.apps.CatalogConfig',
+    'worker.apps.WorkerConfig'
 ]
 
 EXTERNAL_APPS = [    
@@ -50,6 +51,9 @@ EXTERNAL_APPS = [
     'drf_yasg',
     'debug_toolbar',
     'corsheaders',
+    'django_celery_results',
+    'django_celery_beat',
+    'health_checks',
 ]
 
 INSTALLED_APPS = INSTALLED_APPS + MY_APPS + EXTERNAL_APPS
@@ -168,6 +172,8 @@ REST_FRAMEWORK = {
     ],
 }
 
+# DEBUG TOOLBAR
+
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.history.HistoryPanel',
     'debug_toolbar.panels.versions.VersionsPanel',
@@ -183,6 +189,8 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.redirects.RedirectsPanel',
     'debug_toolbar.panels.profiling.ProfilingPanel',
 ]
+
+# CORs
 
 INTERNAL_IPS = [
     # ...
@@ -219,3 +227,21 @@ CORS_ALLOW_HEADERS = [
 'x-csrftoken',
 'x-requested-with',
 ]
+
+# CELERY AND EMAIL
+
+CELERY_BROKER_URL='redis://127.0.0.1:6379'
+CELERY_ACCEPT_CONTENT=['application/json']
+CELERY_RESULT_SERIALIZER='json'
+CELERY_TASK_SERIALIZER='json'
+CELERY_TIMEZONE='Asia/Ho_Chi_Minh'
+
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'haphuongdien.12a16.2019@gmail.com'
+EMAIL_HOST_PASSWORD = 'xiho qact epwt hmmd'
