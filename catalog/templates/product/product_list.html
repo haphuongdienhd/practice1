@@ -22,14 +22,14 @@
         <span class="step-links">
             {% if previous %}
                 <a href="?page=1">&laquo; first</a>
-                <a href="{{ previous }}">previous</a>
+                <a href="?page={{ page |add:-1 }}">previous</a>
             {% endif %}
     
             <span class="current">
                 Page {{ page }} of {{ total }}.
             </span>
                 {% if next %}
-                <a href="{{ next }}">next</a>
+                <a href="?page={{ page |add:1 }}">next</a>
                 <a href="?page={{ total }}">last &raquo;</a>
                 {% endif %}
         </span>
