@@ -1,11 +1,14 @@
 # products/views.py
 
+from django.http import HttpResponseNotFound
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views import generic
+
+import requests
 
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -19,6 +22,8 @@ from .forms import CommentForm, ImageForm, ProductForm, CategoryForm
 from .serializers import ProductSerializer, CategorySerializer
 
 # Create your views here.
+
+DEFAULT_URL = 'http://127.0.0.1:8000'
 
 # Sub Function
 
@@ -68,19 +73,16 @@ def product_create(request):
 
 # Retrieve product list
 def product_list(request):
-    
-    products = Product.objects.all().order_by('-id')
-    paginator = Paginator(products, 5)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
-    
-    return render(request, "product/product_list.html", {"page_obj": page_obj})
+    if 'page' in request.GET:
+        response = requests.get(f'{DEFAULT_URL}'+reverse('catalog:api_product_list')+f'?page={request.GET.get("page")}')
+    else:
+        response = requests.get(f'{DEFAULT_URL}'+reverse('catalog:api_product_list'))
+    data = response.json()
+        
+    return render(request, "product/product_list.html", data)
 
 
-# Retrieve a single product
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    return render(request, "product/product_detail.html", { "product": product, })
+
 
 
 # Update a single product
@@ -88,14 +90,19 @@ def product_detail(request, pk):
 def product_update(request, pk):
     product_obj = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
+        print(request.POST)
         form = ProductForm(request.POST,instance=product_obj, files=request.FILES)
+        print(form.data)
         if form.is_valid():
             form.save()
             return redirect(reverse("catalog:product_detail", args=[pk,]))
+        else: return HttpResponseNotFound(form.errors.as_data())
     else:
         form = ProductForm(instance=product_obj)
+    
+    categories = Category.objects.all()
 
-    return render(request, "product/product_form.html", { "form": form, "object": product_obj})
+    return render(request, "product/product_form.html", { "form": form, "object": product_obj, "categories": categories})
 
 
 # Delete a single product
@@ -185,7 +192,7 @@ class ProductListApiView(generics.ListAPIView):
     
     
     def post(self, request, *args, **kwargs):
-        print("request.data",request.data)
+        # print("request.data",request.data)
         
         if find_product_by_name(request.data['name']):
             return Response(
@@ -225,7 +232,7 @@ class ProductDetailApiView(generics.ListAPIView):
         
     def put(self, request, pk, *args, **kwargs):
         product = find_product_by_id(pk)
-        
+        # print(request)
         if not product:
             return Response(
                 {"message": "Product with id %d does not exist" %(pk)}, 
@@ -433,3 +440,9 @@ class CommentPerProduct(APIView):
         count = Comment.objects.filter(product=product).count()
             
         return Response(count, status=status.HTTP_200_OK)
+    
+# Retrieve a single product
+def product_detail(request, pk):
+    product_class = ProductDetailApiView()
+    product = product_class.get(request,pk).data
+    return render(request, "product/product_detail.html", { "product": product, })
