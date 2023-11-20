@@ -16,6 +16,17 @@ class CategorySerializer(serializers.ModelSerializer):
         if 'parent' in validated_data:
             category.parent = Category.objects.get(id=validated_data['parent'])
         return category
+    
+    def update(self, instance, validated_data): 
+        print(instance)
+        print('validated_data', validated_data)
+        
+        if 'parent' in validated_data:
+            instance.parent = validated_data.get('parent')
+        if 'name' in validated_data:
+            instance.name = validated_data.get('name')
+        instance.save()
+        return instance
         
 class ProductCategorySerializer(serializers.ModelSerializer):
     category = CategorySerializer(many=True)
@@ -45,13 +56,17 @@ class ProductSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data): 
         print(instance)
         print('validated_data', validated_data)
-        categories = ProductCategory.objects.filter(product=instance)
-        if categories:
-            categories.delete()
-                
-        instance.name = validated_data.get('name')
-        for cate in validated_data.pop('category'):
-            category = Category.objects.get(name=cate['name'])
-            ProductCategory.objects.create(product=instance, category=category)        
+        
+        if 'category' in validated_data:
+            categories = ProductCategory.objects.filter(product=instance)
+            if categories:
+                categories.delete()
+            for cate in validated_data.pop('category'):
+                category = Category.objects.get(name=cate['name'])
+                ProductCategory.objects.create(product=instance, category=category)        
+        if 'name' in validated_data:
+            print("product change name")
+            instance.name = validated_data.get('name')
+            instance.save()
         
         return instance
