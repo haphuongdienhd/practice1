@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views import generic
+from django.db.models import Count, F, Value
 
 import requests
 
@@ -67,23 +68,10 @@ def product_create(request):
             return redirect(reverse("catalog:product_list"))
     else:
         form = ProductForm()
-
-    return render(request, "product/product_form.html", { "form": form, })
-
-
-# Retrieve product list
-def product_list(request):
-    if 'page' in request.GET:
-        response = requests.get(f'{DEFAULT_URL}'+reverse('catalog:api_product_list')+f'?page={request.GET.get("page")}')
-    else:
-        response = requests.get(f'{DEFAULT_URL}'+reverse('catalog:api_product_list'))
-    data = response.json()
         
-    return render(request, "product/product_list.html", data)
+    categories = Category.objects.all().order_by('name')
 
-
-
-
+    return render(request, "product/product_form.html", { "form": form, "categories": categories,})
 
 # Update a single product
 @login_required(login_url='/account/login/')
@@ -100,9 +88,9 @@ def product_update(request, pk):
     else:
         form = ProductForm(instance=product_obj)
     
-    categories = Category.objects.all()
+    categories = Category.objects.all().order_by('name')
 
-    return render(request, "product/product_form.html", { "form": form, "object": product_obj, "categories": categories})
+    return render(request, "product/product_form.html", { "form": form, "object": product_obj, "categories": categories,})
 
 
 # Delete a single product
@@ -238,13 +226,42 @@ class ProductDetailApiView(generics.ListAPIView):
                 {"message": "Product with id %d does not exist" %(pk)}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+            
+        if 'name' not in request.data: 
+            return Response({"message": "Missing name field"}, status=status.HTTP_400_BAD_REQUEST)
         
-        for category in request.data['category']:
-            if not find_category_by_name(category['name']):
-                return Response(
-                {"message": f"Category with name {category['name']} does not exist"},
+        if 'category' in request.data:
+            for category in request.data['category']:
+                if not find_category_by_name(category['name']):
+                    return Response(
+                    {"message": f"Category with name {category['name']} does not exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            return Response({"message": "Missing category field"}, status=status.HTTP_400_BAD_REQUEST)
+                
+        serializer = ProductSerializer(instance=product,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self, request, pk, *args, **kwargs):
+        product = find_product_by_id(pk)
+        # print(request)
+        if not product:
+            return Response(
+                {"message": "Product with id %d does not exist" %(pk)}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+        if 'category' in request.data:
+            for category in request.data['category']:
+                if not find_category_by_name(category['name']):
+                    return Response(
+                    {"message": f"Category with name {category['name']} does not exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
                 
         serializer = ProductSerializer(instance=product,data=request.data,partial=True)
         if serializer.is_valid():
@@ -335,17 +352,48 @@ class CategoryDetailApiView(generics.ListAPIView):
                 
     def put(self, request, pk, *args, **kwargs):
         category = find_category_by_id(pk)
+        
         if not category:
             return Response(
                 {"message": "Category with id %d does not exist" %(pk)}, 
                 status=status.HTTP_404_NOT_FOUND
             )
             
-        if find_category_by_name(request.data['name']):
+        if 'name' not in request.data: 
+            return Response({"message": "Missing name field"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if 'parent' not in request.data: 
+            return Response({"message": "Missing name parent"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if not find_category_by_id(request.data['parent']):
+                return Response(
+                    {"message": f"Category with id {request.data['parent']} does not exist"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )   
+        
+        serializer = CategorySerializer(instance=category,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def patch(self, request, pk, *args, **kwargs):
+        print(request.data)
+        print(find_category_by_id(22))
+        category = find_category_by_id(pk)
+        if not category:
             return Response(
-                {"message": f"Category with name {request.data['name']} already exists"}, 
-                status=status.HTTP_400_BAD_REQUEST
+                {"message": "Category with id %d does not exist" %(pk)}, 
+                status=status.HTTP_404_NOT_FOUND
             )
+            
+        if 'parent' in request.data:
+            if not find_category_by_id(request.data['parent']):
+                return Response(
+                    {"message": f"Category with id {request.data['parent']} does not exist"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )   
         
         serializer = CategorySerializer(instance=category,data=request.data,partial=True)
         if serializer.is_valid():
@@ -370,17 +418,9 @@ class CategoryDetailApiView(generics.ListAPIView):
 class ProductPerCateApiView(APIView):
     authentication_classes = []
     
-    def get(self, request, pk, *args, **kwargs):
-        category = find_category_by_id(pk)
-        if not category:
-            return Response(
-                {"message": "Category with id %d does not exist" %(pk)}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        productcategories = ProductCategory.objects.filter(category=category)
-        count = productcategories.count()
-            
-        return Response(count, status=status.HTTP_200_OK)
+    def get(self, request, *args, **kwargs):
+        categories = Category.objects.all().order_by('name').values('name').annotate(Count('product'))            
+        return Response(categories, status=status.HTTP_200_OK)
     
 # Product Image
 @login_required(login_url='/account/login/')
@@ -428,21 +468,23 @@ def comment_list(request, pk):
 class CommentPerProduct(APIView):
     authentication_classes = []
     
-    def get(self, request, pk, *args, **kwargs):
-        product = find_product_by_id(pk)
-        # print(product)
-        if not product:
-            return Response(
-                {"message": "Product with id %d does not exist" %(int(pk))}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+    def get(self, request, *args, **kwargs):
         
-        count = Comment.objects.filter(product=product).count()
-            
-        return Response(count, status=status.HTTP_200_OK)
+        products = Product.objects.all().order_by('name').values('name').annotate(Count('comment'))            
+        return Response(products, status=status.HTTP_200_OK)
+    
+# Retrieve product list
+def product_list(request):
+    if 'page' in request.GET:
+        response = requests.get(f'{DEFAULT_URL}'+reverse('catalog:api_product_list')+f'?page={request.GET.get("page")}')
+    else:
+        response = requests.get(f'{DEFAULT_URL}'+reverse('catalog:api_product_list'))
+    data = response.json()
+        
+    return render(request, "product/product_list.html", data)
     
 # Retrieve a single product
 def product_detail(request, pk):
     product_class = ProductDetailApiView()
-    product = product_class.get(request,pk).data
+    product = product_class.get(request,int(pk)).data
     return render(request, "product/product_detail.html", { "product": product, })
