@@ -1,7 +1,11 @@
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.contrib import messages
+
+from worker.tasks import send_mail_func
+from worker.signals import user_signed_up_signal
 
 from .forms import CustomUserCreationForm
 from .serializers import RegisterSerializer, UserSerializer
@@ -55,8 +59,13 @@ def register(request):
         )
     elif request.method == "POST":
         form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
+        if form.is_valid():                      
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+            # print(user)  
+            send_mail_func(form.data)
+            user_signed_up_signal.send(sender=None, user=user)
             login(request, user)
             return redirect(reverse("dashboard"))            
         return HttpResponseNotFound("Invalid Information")
@@ -88,7 +97,8 @@ class RegisterUserAPIView(generics.ListAPIView):
             return Response(serializer._errors, status=status.HTTP_400_BAD_REQUEST)
     
 class AuthTokenAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+    authentication_classes = []
     serializer_class = AuthTokenSerializer
     queryset = User.objects.all()
     
@@ -106,9 +116,47 @@ class AuthTokenAPIView(generics.ListAPIView):
             )
         
     def post(self, request, *args, **kwargs):
-        print(request.user)
-        token, created = Token.objects.get_or_create(user=request.user)
-        return Response(
-                {'token': token.key},
-                status=status.HTTP_201_CREATED
-            )
+        username = request.data['username']
+        password = request.data['password']
+        # print(username)
+        # print(password)        
+        user = find_user_by_name(username)
+        if user.is_active:  
+            authuser = authenticate(username=username, password=password)
+            if authuser is not None:
+                token, created = Token.objects.get_or_create(user=authuser)
+                return Response(
+                        {'token': token.key},
+                        status=status.HTTP_201_CREATED
+                    )
+            
+            else:
+                
+                return Response(
+                        {'message': "Invalid username of password"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+        
+        else:            
+            token, created = Token.objects.get_or_create(user=user)     
+            # print("co active meo dau")       
+            return Response(
+                    {'token': token.key},
+                    status=status.HTTP_201_CREATED
+                )
+        
+def activate(request, authtoken):
+    
+    try:
+        user = Token.objects.get(key=authtoken).user
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None:
+        user.is_active = True
+        user.save()
+        
+        return redirect(reverse("login"))
+    else:
+    
+        return redirect(reverse("dashboard"))  
