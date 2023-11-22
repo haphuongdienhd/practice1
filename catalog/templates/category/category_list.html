@@ -1,15 +1,18 @@
-<!DOCTYPE html>
+{% extends 'base.html' %} {% block content %}<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <title>category List</title>
+    <style>
+        
+    </style>
 </head>
 
 <body>
     <h3>category List</h3>
     {% for category in page_obj %}
-    <p>{{ forloop.counter }}. {{ category.name }} - {{ category.image }} (
+    <p>{{ forloop.counter }}. {{ category.name }} (
         <a href="{% url 'catalog:category_update' category.id %}">Update</a> |
         <a href="{% url 'catalog:category_delete' category.id %}">Delete</a>)
     </p>
@@ -34,4 +37,4 @@
 
 </body>
 
-</html>
+</html>{% endblock %}

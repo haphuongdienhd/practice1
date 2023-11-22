@@ -35,7 +35,7 @@
             <label for="id_category">Category:</label>
             {% for category in categories %}
                 <div>
-                    <input type="checkbox" id={{category.id}} value={{category.id}} name="category">
+                    <input type="checkbox" id="{{category.id}}" value="{{category.id}}" name="category">
                     {{ category.name }} </label>
                 </div>
             {% endfor %}

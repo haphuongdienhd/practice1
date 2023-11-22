@@ -1,21 +1,49 @@
-<!DOCTYPE html>
+{% extends 'base.html' %} {% block content %}<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <title>product List</title>
+    <style>
+        /* Add CSS styles for flex container and items */
+        .product-list {
+            display: flex;
+            flex-wrap: wrap; /* Allow items to wrap to the next row if necessary */
+            justify-content: space-between; /* Space items evenly along the main axis */
+            list-style: none; /* Remove list styles */
+            padding: 0;
+        }
+ 
+        .product-item {
+            width: 25%; /* Limit item width to avoid overcrowding */
+            margin: 10px; /* Add spacing between items */
+            border: 1px solid #ccc; /* Add a border for visual separation */
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
     <h3>product List</h3>
-    {% for product in results %}
-    <p>{{ forloop.counter }}. {{ product.name }} - {{ product.thumnail }} (
-        <a href="{% url 'catalog:product_detail' product.id %}">View</a> |
-        <a href="{% url 'catalog:product_update' product.id %}">Update</a> |
-        <a href="{% url 'catalog:product_delete' product.id %}">Delete</a>)
-    </p>
-    {% endfor %}
-
+    <ul class="product-list">
+        {% for product in results %}
+        <li class="product-item">
+            <p>{{ forloop.counter }}. {{ product.name }}
+                <p> {% if product.thumnail %}
+                    <img src="{{product.thumnail}}" width="200" height=auto>
+                    {% else %}
+                    {% load static %}
+                    <img src = "{% static 'catalog/img/default_product.png' %}" width="200" height=auto>
+                    {% endif %}
+                </p>                
+                <a href="{% url 'catalog:product_detail' product.id %}">View</a> | 
+                <a href="{% url 'catalog:product_update' product.id %}">Update</a> | 
+                <a href="{% url 'catalog:product_delete' product.id %}">Delete</a>
+            </p>
+        </li>
+        {% endfor %}
+    </ul>
     <p> <a href="{% url 'catalog:product_create' %}"> + Add A New product</a></p>
 
     <div class="pagination">
@@ -36,4 +64,4 @@
     </div>
 </body>
 
-</html>
+</html>{% endblock %}
