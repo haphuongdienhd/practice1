@@ -28,7 +28,8 @@ def send_mail_func(self, data):
     print('auth-token for mail', authtoken)
     mail_subject="Sign up"
     message=f"""HELLO!!!...\n
-    Please click in {BASE_URL + '/activate/' + authtoken['token']} to activate your account
+    Hi user {data['username']},\n
+    Please click in {BASE_URL + '/activate/' + authtoken['token']} to activate your account.\n
     """
     to_email=data['email']
     send_mail(
