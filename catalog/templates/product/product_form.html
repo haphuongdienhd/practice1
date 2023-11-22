@@ -1,3 +1,5 @@
+{% extends 'base.html' %} {% block content %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,10 +7,10 @@
     <meta charset="UTF-8">
     <title>{% if object %}Edit product {% else %} Create New product {% endif %}</title>
     <style id="compiled-css" type="text/css">
-        div {
+        .checkcate {
             display: inline-block;
             width: 10%;  
-            margin:5px;
+            margin: 5px;
             text-align: left;
         }
     </style>
@@ -34,7 +36,7 @@
         <p>
             <label for="id_category">Category:</label>
             {% for category in categories %}
-                <div>
+                <div class="checkcate">
                     <input type="checkbox" id="{{category.id}}" value="{{category.id}}" name="category">
                     {{ category.name }} </label>
                 </div>
@@ -47,3 +49,4 @@
 
 </html>
 
+{% endblock %}

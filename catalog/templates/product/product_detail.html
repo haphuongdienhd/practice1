@@ -1,3 +1,4 @@
+{% extends 'base.html' %} {% block content %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,7 +12,13 @@
         <a href="{% url 'catalog:product_delete' product.id %}">Delete</a>
     </p>
     <p>
-        product Thumnail: <img src="{{product.thumnail}}" width="200" height=auto>
+        product Thumnail: <img src="{{product.thumnail.url}}" width="200" height=auto>
+    </p>
+    <p>
+        product Images:
+        {% for image in images %}
+        <img src="{{image.image.url}}" width="200" height=auto>
+        {% endfor %}
     </p>
     <p>
         <a href="{% url 'catalog:image_upload' product.id %}">Add Image</a>
@@ -26,3 +33,4 @@
 </body>
 
 </html>
+{% endblock %}
