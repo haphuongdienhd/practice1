@@ -172,7 +172,7 @@ def activate(request, authtoken):
         user = token.user
     except(TypeError, ValueError, OverflowError, User.DoesNotExist, Token.DoesNotExist):
         user = None
-    if not user.isactive:
+    if not user.is_active:
         if user is not None:            
             if not token_expire:
                 token.delete()
