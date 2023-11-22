@@ -78,9 +78,9 @@ def product_create(request):
 def product_update(request, pk):
     product_obj = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
-        print(request.POST)
+        print('post_product_update', request.POST)
         form = ProductForm(request.POST,instance=product_obj, files=request.FILES)
-        print(form.data)
+        print('form_data', form.data)
         if form.is_valid():
             form.save()
             return redirect(reverse("catalog:product_detail", args=[pk,]))
@@ -481,6 +481,6 @@ def product_list(request):
     
 # Retrieve a single product
 def product_detail(request, pk):
-    product_class = ProductDetailApiView()
-    product = product_class.get(request,int(pk)).data
-    return render(request, "product/product_detail.html", { "product": product, })
+    product = Product.objects.get(pk=pk)
+    images = ProductImage.objects.select_related('product').filter(product=product)
+    return render(request, "product/product_detail.html", { "product": product, 'images':images})
