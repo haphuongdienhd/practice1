@@ -25,7 +25,7 @@ def send_mail_func(self, data):
         'password': data['password1']
     }
     authtoken = request(method='POST',url=BASE_URL+reverse('api_token'),data=token_create_data).json()
-    # print('auth-token', authtoken)
+    print('auth-token for mail', authtoken)
     mail_subject="Sign up"
     message=f"""HELLO!!!...\n
     Please click in {BASE_URL + '/activate/' + authtoken['token']} to activate your account

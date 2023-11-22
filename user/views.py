@@ -1,5 +1,8 @@
+import datetime
+import pytz
+
 from django.contrib.auth import login, authenticate
-from django.http import HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.contrib import messages
@@ -9,6 +12,7 @@ from worker.signals import user_signed_up_signal
 
 from .forms import CustomUserCreationForm
 from .serializers import RegisterSerializer, UserSerializer
+from .utils import token_expire
 
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -36,7 +40,7 @@ def find_user_by_id(id):
 def find_user_by_name(name):
     
     try:
-        return User.objects.get(username=name)
+        return User.objects.select_related().get(username=name)
     except User.DoesNotExist:
         return None
     
@@ -49,6 +53,7 @@ def find_user_by_email(email):
 
 
 def dashboard(request):
+    
     return render(request, "user/dashboard.html")
 
 def register(request):
@@ -71,7 +76,7 @@ def register(request):
         return HttpResponseNotFound("Invalid Information")
     
 #Class based view to register user
-class RegisterUserAPIView(generics.ListAPIView):
+class RegisterUserAPIView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
     queryset = User.objects.all()
@@ -98,22 +103,28 @@ class RegisterUserAPIView(generics.ListAPIView):
     
 class AuthTokenAPIView(generics.ListAPIView):
     permission_classes = [AllowAny]
-    authentication_classes = []
     serializer_class = AuthTokenSerializer
     queryset = User.objects.all()
     
     def get(self, request, *args, **kwargs):
-        
+        print(request.user)
         user_id = request.user.id
+        print(user_id)
         token = find_token_by_user_id(user_id)
-        
-        if token:
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
+        print(token)
+        if user_id:
+            if token:
+                return Response({'token': token.key}, status=status.HTTP_200_OK)
+            
+            return Response(
+                    {"message": "Token had not created yet."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
         
         return Response(
-                {"message": "Token had not created yet."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+                    {"message": "UNAUTHORIZED."},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
         
     def post(self, request, *args, **kwargs):
         username = request.data['username']
@@ -125,8 +136,13 @@ class AuthTokenAPIView(generics.ListAPIView):
             authuser = authenticate(username=username, password=password)
             if authuser is not None:
                 token, created = Token.objects.get_or_create(user=authuser)
+                if not created:
+                # update the created time of the token to keep it valid
+                    token.created = datetime.datetime.utcnow()
+                    token.save()
                 return Response(
-                        {'token': token.key},
+                        {'token': token.key,
+                         'created': token.created},
                         status=status.HTTP_201_CREATED
                     )
             
@@ -138,7 +154,11 @@ class AuthTokenAPIView(generics.ListAPIView):
                     )
         
         else:            
-            token, created = Token.objects.get_or_create(user=user)     
+            token, created = Token.objects.get_or_create(user=user)
+            if not created:
+                # update the created time of the token to keep it valid
+                token.created = datetime.datetime.utcnow()
+                token.save()
             # print("co active meo dau")       
             return Response(
                     {'token': token.key},
@@ -148,15 +168,23 @@ class AuthTokenAPIView(generics.ListAPIView):
 def activate(request, authtoken):
     
     try:
-        user = Token.objects.get(key=authtoken).user
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        token = Token.objects.select_related('user').get(key=authtoken)
+        user = token.user
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist, Token.DoesNotExist):
         user = None
-
-    if user is not None:
-        user.is_active = True
-        user.save()
+    if not user.isactive:
+        if user is not None:            
+            if not token_expire:
+                token.delete()
+                user.delete()
+                return HttpResponseBadRequest("""<h1>Token had Expired, You must register again<h1>""")
+                
+            user.is_active = True
+            user.save()        
+            return redirect(reverse("login"))
         
-        return redirect(reverse("login"))
+        else:
+            return HttpResponseNotFound("<h1>User not Found, have to sign up</h1>")
+        
     else:
-    
-        return redirect(reverse("dashboard"))  
+        return HttpResponseNotFound("<h1>User already active</h1>")
