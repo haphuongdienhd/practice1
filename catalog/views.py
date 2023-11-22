@@ -116,7 +116,7 @@ def category_create(request):
 
 # Retrieve category list
 def category_list(request):
-    categories = Category.objects.all().order_by('-id')
+    categories = Category.objects.all().order_by('name')
     paginator = Paginator(categories, 5)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
@@ -294,7 +294,7 @@ class CategoryListApiView(generics.ListAPIView):
     
     # 1. List all
     def get(self, request, *args, **kwargs):
-        categories = Category.objects.all().order_by('-id')
+        categories = Category.objects.all().order_by('name')
         
         if not request.GET.get('page'):
             # print("else")
@@ -333,7 +333,7 @@ class CategoryListApiView(generics.ListAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class CategoryDetailApiView(generics.ListAPIView):
+class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     queryset = Category.objects.all().order_by('-id')
     
@@ -379,8 +379,6 @@ class CategoryDetailApiView(generics.ListAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self, request, pk, *args, **kwargs):
-        print(request.data)
-        print(find_category_by_id(22))
         category = find_category_by_id(pk)
         if not category:
             return Response(
@@ -416,7 +414,6 @@ class CategoryDetailApiView(generics.ListAPIView):
         )
         
 class ProductPerCateApiView(APIView):
-    authentication_classes = []
     
     def get(self, request, *args, **kwargs):
         categories = Category.objects.all().order_by('name').values('name').annotate(Count('product'))            
@@ -466,11 +463,10 @@ def comment_list(request, pk):
 
 # Report total comments
 class CommentPerProduct(APIView):
-    authentication_classes = []
     
     def get(self, request, *args, **kwargs):
         
-        products = Product.objects.all().order_by('name').values('name').annotate(Count('comment'))            
+        products = Product.objects.all().order_by('-id').values('name').annotate(Count('comment'))            
         return Response(products, status=status.HTTP_200_OK)
     
 # Retrieve product list
