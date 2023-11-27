@@ -2,8 +2,8 @@ import datetime
 import pytz
 
 from django.contrib.auth import authenticate
-
-from user.models import MyUser
+from django.contrib.auth.models import User as MyUser
+# from user.models import MyUser
 
 from .serializers import RegisterSerializer, UserSerializer
 

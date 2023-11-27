@@ -1,5 +1,5 @@
 from django.dispatch import receiver
-from .signals import user_signed_up_signal
+from user.signals import user_signed_up_signal
 
 
 @receiver(user_signed_up_signal)

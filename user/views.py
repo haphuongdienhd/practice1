@@ -2,13 +2,14 @@ import datetime
 import pytz
 
 from django.contrib.auth import login
+from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from user.models import MyUser
+# from user.models import MyUser
 
-from .forms import MyUserCreationForm
+from .forms import CustomUserCreationForm
 from .services import token_expire
 from .signals import user_signed_up_signal
 
@@ -25,11 +26,11 @@ def register(request):
     elif request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():                      
-            userform = form.save(commit=False)
-            userform.is_active = False
+            userform = form.save()
+            # userform.is_active = False
             userform.save()
             # # print(userform) 
-            user_signed_up_signal.send(sender=MyUser,data=userform)
+            # user_signed_up_signal.send(sender=MyUser,data=userform)
             login(request, userform)
             return redirect(reverse("dashboard"))            
         return HttpResponseNotFound("Invalid Information")

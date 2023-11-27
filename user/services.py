@@ -3,10 +3,11 @@ import pytz
 
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth.models import User as MyUser
 
 from rest_framework.authtoken.models import Token
 
-from user.models import MyUser
+# from user.models import MyUser
 
 def find_token_by_user_id(user_id):
     
