@@ -1,4 +1,4 @@
-#catalog/exceptions.py
+#catalog/services.py
 
 from django.core.paginator import Paginator
 
