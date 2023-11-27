@@ -3,8 +3,6 @@ import pytz
 
 from django.contrib.auth import authenticate
 from user.models import MyUser
-# from user.models import MyUser
-
 from .serializers import RegisterSerializer, UserSerializer
 
 from ..services import (
