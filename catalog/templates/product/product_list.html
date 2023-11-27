@@ -27,11 +27,11 @@
 <body>
     <h3>product List</h3>
     <ul class="product-list">
-        {% for product in results %}
+        {% for product in page_obj %}
         <li class="product-item">
             <p>{{ forloop.counter }}. {{ product.name }}
                 <p> {% if product.thumnail %}
-                    <img src="{{product.thumnail}}" width="200" height=auto>
+                    <img src="{{product.thumnail.url}}" width="200" height=auto>
                     {% else %}
                     {% load static %}
                     <img src = "{% static 'catalog/img/default_product.png' %}" width="200" height=auto>
@@ -48,18 +48,16 @@
 
     <div class="pagination">
         <span class="step-links">
-            {% if previous %}
+            {% if page_obj.has_previous %}
                 <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ page |add:-1 }}">previous</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
             {% endif %}
     
             <span class="current">
-                Page {{ page }} of {{ total }}.
-            </span>
-                {% if next %}
-                <a href="?page={{ page |add:1 }}">next</a>
-                <a href="?page={{ total }}">last &raquo;</a>
-                {% endif %}
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span> {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a> {% endif %}
         </span>
     </div>
 </body>
