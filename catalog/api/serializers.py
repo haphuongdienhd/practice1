@@ -9,15 +9,12 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
                         
     def create(self, validated_data):
-        print('validated_data', validated_data)
         category = Category.objects.create(name=validated_data['name'])
         if 'parent' in validated_data:
             category.parent = Category.objects.get(id=validated_data['parent'])
         return category
     
     def update(self, instance, validated_data): 
-        print(instance)
-        print('validated_data', validated_data)
         
         if 'parent' in validated_data:
             instance.parent = validated_data.get('parent')
@@ -43,7 +40,6 @@ class ProductSerializer(serializers.ModelSerializer):
         
         
     def create(self, validated_data):
-        print('validated_data', validated_data)
         product = Product.objects.create(name=validated_data['name'])
         if 'category' in validated_data:
             for cate in validated_data.pop('category'):
@@ -51,10 +47,7 @@ class ProductSerializer(serializers.ModelSerializer):
                 ProductCategory.objects.create(product=product, category=category)
         return product
     
-    def update(self, instance, validated_data): 
-        print(instance)
-        print('validated_data', validated_data)
-        
+    def update(self, instance, validated_data):        
         if 'category' in validated_data:
             categories = ProductCategory.objects.filter(product=instance)
             if categories:
@@ -63,7 +56,6 @@ class ProductSerializer(serializers.ModelSerializer):
                 category = Category.objects.get(name=cate['name'])
                 ProductCategory.objects.create(product=instance, category=category)        
         if 'name' in validated_data:
-            print("product change name")
             instance.name = validated_data.get('name')
             instance.save()
         

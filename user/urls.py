@@ -9,7 +9,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url='dashboard/')),
     path("dashboard/", dashboard, name="dashboard"),
     re_path(r"^register/", register, name="register"),
-    path('activate/<str:authtoken>', activate, name='activate_url'),
+    path('activate/<str:signup_token>', activate, name='activate_url'),
 ]
 
 urlpatterns += apiurls.urlpatterns

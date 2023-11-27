@@ -2,7 +2,7 @@ import datetime
 import pytz
 
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User as MyUser
+from user.models import MyUser
 # from user.models import MyUser
 
 from .serializers import RegisterSerializer, UserSerializer
@@ -99,8 +99,7 @@ class AuthTokenAPIView(generics.ListAPIView):
             if not created:
                 # update the created time of the token to keep it valid
                 token.created = datetime.datetime.utcnow()
-                token.save()
-            # print("co active meo dau")       
+                token.save() 
             return Response(
                     {'token': token.key},
                     status=status.HTTP_201_CREATED

@@ -139,7 +139,6 @@ class ProductListApiView(generics.ListAPIView):
     pagination = CustomPagination
     
     def post(self, request, *args, **kwargs):
-        # print("request.data",request.data)
         try:
             if Product.objects.filter(name=request.data['name']).exists():
                 raise ObjectWithNameExists(ProductObject(), request.data['name'])

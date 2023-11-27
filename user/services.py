@@ -3,7 +3,7 @@ import pytz
 
 from django.conf import settings
 from django.utils import timezone
-from django.contrib.auth.models import User as MyUser
+from user.models import MyUser
 
 from rest_framework.authtoken.models import Token
 
@@ -37,15 +37,13 @@ def find_user_by_email(email):
     except MyUser.DoesNotExist:
         return None
 
-
-
-def token_expire(token):
+def token_expire(token_created):
     """Return True if Token has not been expired
     Else return False"""
     utc_now = timezone.now()
     utc_now = utc_now.replace(tzinfo=pytz.utc)
 
-    if token.created < utc_now - settings.AUTH_TOKEN_VALIDITY:
+    if token_created < utc_now - settings.AUTH_TOKEN_VALIDITY:
         return False
     
     return True
