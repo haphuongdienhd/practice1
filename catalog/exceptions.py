@@ -1,14 +1,34 @@
 from abc import ABC
 
-from django.http import Http404, HttpResponse, HttpResponseNotFound
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 
 from rest_framework import status
+from rest_framework.response import Response
 
 class ExceptionNotFound(Exception):
-    pass
+    def return_for_web(self, msg):
+        return HttpResponseNotFound(
+            content=str(msg),
+        )
+    def return_for_api(self, msg):
+        "HTTP_404_NOT_FOUND"
+        return Response(
+                {"exception": str(msg)},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class ExceptionAlreadyExists(Exception):
-    pass
+    def return_for_web(self, msg):
+        return HttpResponseBadRequest(
+            content=str(msg),
+        )
+    def return_for_api(self, msg):
+        "HTTP_400_BAD_REQUEST"
+        return Response(
+                {"exception": str(msg)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class Object(ABC):
     # Return kind of object as string
@@ -32,6 +52,7 @@ class ObjectNotFoundById(ExceptionNotFound):
 
     def __str__(self):
         return f"{str(self.object)} with id {self.id} does not exist"
+    
     
 class ObjectNotFoundByName(ExceptionNotFound):
     """Return 404 Message"""
