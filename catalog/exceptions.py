@@ -25,7 +25,7 @@ class ProductCategoryObject(Object):
     pass
 
 class ObjectNotFoundById(ExceptionNotFound):
-    """Return 404 Response"""
+    """Return 404 Message"""
     def __init__(self, object: Object, id: int):
         self.object = object
         self.id = id
@@ -34,7 +34,7 @@ class ObjectNotFoundById(ExceptionNotFound):
         return f"{str(self.object)} with id {self.id} does not exist"
     
 class ObjectNotFoundByName(ExceptionNotFound):
-    """Return 404 Response"""
+    """Return 404 Message"""
     def __init__(self, object: Object, name: str):
         self.object = object
         self.name = name
@@ -43,7 +43,7 @@ class ObjectNotFoundByName(ExceptionNotFound):
         return f"{str(self.object)} with name {self.name} does not exist"
     
 class ObjectWithNameExists(ExceptionAlreadyExists):
-    """Return 404 Response"""
+    """Return 404 Message"""
     def __init__(self, object: Object, name: str):
         self.object = object
         self.name = name
