@@ -44,11 +44,8 @@ def create_category(validate_data, **kwargs) -> Category:
             find_category_by_id(parent)
     else:
         parent = None
-    
-    if 'image' in kwargs:
-        category = Category.objects.create(name=name,parent=parent,image=kwargs['image'])
-    else: 
-        category = Category.objects.create(name=name,parent=parent)
+        
+    category = Category.objects.create(name=name,parent=parent,**kwargs)
     category.save()
     return category
 
