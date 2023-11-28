@@ -10,6 +10,7 @@ from practice1.pagination import CustomPagination
 from ..models import Category, Product
 from ..services import (
     create_category,
+    create_product,
     find_category_by_id, 
     find_category_by_name,
     find_product_by_id,
@@ -114,19 +115,9 @@ class ProductListApiView(generics.ListCreateAPIView):
     
     def post(self, request, *args, **kwargs):
         try:
-            if Product.objects.filter(name=request.data['name']).exists():
-                raise ObjectWithNameExists(ProductObject(), request.data['name'])
-            
-            if 'category' in request.data:
-                for category in request.data['category']:
-                    find_category_by_name(category['name'])
-                
-            serializer = ProductSerializer(data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            product = create_product(request.data)                
+            serializer = ProductSerializer(product, partial=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         except ExceptionNotFound as e:
             return e.return_404_response(e)

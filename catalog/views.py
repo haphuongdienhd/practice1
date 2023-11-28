@@ -98,10 +98,11 @@ def retrieve_product(request, pk):
 @login_required(login_url='/account/login/')
 def create_product(request):    
     if request.method == "POST":        
-        form = ProductForm(data=request.POST, files=request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect(reverse("catalog:product_list"))
+        if request.FILES:
+            product = services.create_product(validate_data=request.POST, thumnail=request.FILES["thumnail"])
+        else:
+            product = services.create_product(validate_data=request.POST)
+        return redirect(reverse("catalog:product_detail", args=[product.pk,]))
     else:
         form = ProductForm()        
     categories = Category.objects.all().order_by('name')
