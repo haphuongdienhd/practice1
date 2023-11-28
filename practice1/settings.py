@@ -165,6 +165,8 @@ LOGOUT_REDIRECT_URL = "dashboard"
 # Base url to serve media files
 MEDIA_URL = '/media/'
 
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 # Path where media is stored'
 MEDIA_ROOT = BASE_DIR / 'media'
 
