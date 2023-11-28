@@ -6,11 +6,11 @@ from django.http import HttpResponseNotFound, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
-from user.models import MyUser
-
+from .models import MyUser
 from .forms import CustomUserCreationForm
 from .services import token_expire
 from .signals import user_signed_up_signal
+from .exceptions import *
 
 def dashboard(request):
     

@@ -19,7 +19,7 @@ from ..exceptions import *
 
 from .serializers import ProductSerializer, CategorySerializer
 
-class CategoryListApiView(generics.ListAPIView):
+class CategoryListApiView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer
     queryset = Category.objects.all().order_by('-id')
     pagination_class = CustomPagination
@@ -34,9 +34,9 @@ class CategoryListApiView(generics.ListAPIView):
                 status=status.HTTP_201_CREATED
             )
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
         except ExceptionAlreadyExists as e:
-            return e.return_for_api(e)
+            return e.return_400_response(e)
     
 class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
@@ -49,7 +49,7 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
     
     def put(self, request, pk, *args, **kwargs):
         try:
@@ -74,9 +74,9 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
         except ExceptionAlreadyExists as e:
-            return e.return_for_api(e)
+            return e.return_400_response(e)
     
     def patch(self, request, pk, *args, **kwargs):
         try:
@@ -94,9 +94,9 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
         except ExceptionAlreadyExists as e:
-            return e.return_for_api(e)
+            return e.return_400_response(e)
     
     def delete(self, request, pk, *args, **kwargs):
         try:
@@ -107,7 +107,7 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
                 status=status.HTTP_204_NO_CONTENT
             )
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
         
 class ProductListApiView(generics.ListAPIView):
     serializer_class = ProductSerializer
@@ -131,10 +131,10 @@ class ProductListApiView(generics.ListAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
             
         except ExceptionAlreadyExists as e:
-            return e.return_for_api(e)
+            return e.return_400_response(e)
     
 class ProductDetailApiView(generics.ListAPIView):
     serializer_class = ProductSerializer
@@ -147,7 +147,7 @@ class ProductDetailApiView(generics.ListAPIView):
                 serializer = ProductSerializer(product)
                 return Response(serializer.data, status=status.HTTP_200_OK)
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
         
     def put(self, request, pk, *args, **kwargs):
         try:
@@ -173,9 +173,9 @@ class ProductDetailApiView(generics.ListAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
         except ExceptionAlreadyExists as e:
-            return e.return_for_api(e)
+            return e.return_400_response(e)
         
     def patch(self, request, pk, *args, **kwargs):
         try: 
@@ -195,10 +195,10 @@ class ProductDetailApiView(generics.ListAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except ExceptionNotFound as e:
-            return e.return_for_api(e)
+            return e.return_404_response(e)
         
         except ExceptionAlreadyExists as e:
-            return e.return_for_api(e)
+            return e.return_400_response(e)
     
     def delete(self, request, pk, *args, **kwargs):
         try:            
@@ -208,7 +208,7 @@ class ProductDetailApiView(generics.ListAPIView):
                 status=status.HTTP_204_NO_CONTENT
             )
         except ExceptionNotFound as e:
-            return e.return_for_api(e)  
+            return e.return_404_response(e)  
             
 class ProductPerCateApiView(APIView):
     
