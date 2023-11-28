@@ -1,10 +1,9 @@
 # products/views.py
 
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
-from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseNotFound
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from django.views import generic
 
 from .models import Category, Product, Comment, ProductImage
 from .forms import CommentForm, ImageForm, ProductForm, CategoryForm

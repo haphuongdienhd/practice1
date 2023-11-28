@@ -1,5 +1,5 @@
 #product/api/views.py
-from django.db.models import Count, F, Value
+from django.db.models import Count
 
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -7,13 +7,12 @@ from rest_framework.response import Response
 
 from practice1.pagination import CustomPagination
 
-from ..models import Category, Product, Comment, ProductCategory, ProductImage
+from ..models import Category, Product
 from ..services import (
     create_category,
     find_category_by_id, 
     find_category_by_name,
     find_product_by_id,
-    find_product_by_name,
 )
 from ..exceptions import *
 

@@ -1,5 +1,3 @@
-import datetime
-import pytz
 
 from django.contrib.auth import login
 from django.http import HttpResponseNotFound, HttpResponseBadRequest
@@ -47,7 +45,7 @@ def activate(request, signup_token):
                 return HttpResponseBadRequest("""<h1>Token had Expired, You must register again<h1>""")                
             user.is_active = True
             user.save()        
-            return redirect(reverse("login"))
+            return redirect(reverse("dashboard"))
         
         else:
             return HttpResponseNotFound("<h1>User already active</h1>")            

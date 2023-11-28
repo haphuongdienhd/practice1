@@ -1,6 +1,6 @@
 from abc import ABC
 
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.http import HttpResponseBadRequest, HttpResponseNotFound
 
 from rest_framework import status
 from rest_framework.response import Response
