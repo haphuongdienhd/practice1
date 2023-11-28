@@ -65,7 +65,7 @@ def create_product(validate_data, **kwargs) -> Product:
         product.save()
         return product
     except Exception as e:
-        print("aosidpar")
+        print("aosidpar", e)
         product.delete()
         raise e
 

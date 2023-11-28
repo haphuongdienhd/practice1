@@ -116,7 +116,7 @@ class ProductListApiView(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         try:
             product = create_product(request.data)                
-            serializer = ProductSerializer(product, partial=True)
+            serializer = ProductSerializer(product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         except ExceptionNotFound as e:
