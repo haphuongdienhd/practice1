@@ -29,10 +29,10 @@ def create_category(request):
         if request.method == "POST":
             
             if request.FILES:
-                services.create_category(validate_data=request.POST, image=request.FILES["image"])
+                category = services.create_category(validate_data=request.POST, image=request.FILES["image"])
             else:
-                services.create_category(validate_data=request.POST)
-            return redirect(reverse("catalog:category_list"))
+                category = services.create_category(validate_data=request.POST)
+            return redirect(reverse("catalog:category_detail", args=[category.pk,]))
         else:
             form = CategoryForm()
             
