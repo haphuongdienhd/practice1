@@ -12,9 +12,6 @@
         <a href="{% url 'catalog:category_update' category.id %}">Update</a> |
         <a href="{% url 'catalog:category_delete' category.id %}">Delete</a>
     </p>
-    <p>
-        category Thumnail: {% if category.image %}<img src="{{category.image.url}}" width="200" height=auto>{% endif %}
-    </p>
     <p> <a href="{% url 'catalog:category_list' %}">View All categories</a> |
         <a href="{% url 'catalog:category_create'%}">New category</a>
     </p>

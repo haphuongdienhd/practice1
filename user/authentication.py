@@ -3,7 +3,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.authtoken.models import Token
 
-from .services import token_expire
+from .utils import token_expire
 
 
 class ExpiringTokenAuthentication(TokenAuthentication):
@@ -30,7 +30,7 @@ class ExpiringTokenAuthentication(TokenAuthentication):
                 {"error": "Invalid user", "is_authenticated": False}
             )
 
-        if not token_expire(token.created):
+        if not token_expire(token):
             raise AuthenticationFailed(
                 {"error": "Token has expired", "is_authenticated": False}
             )
