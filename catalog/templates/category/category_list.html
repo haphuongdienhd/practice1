@@ -13,7 +13,6 @@
     <h3>category List</h3>
     {% for category in page_obj %}
     <p>{{ forloop.counter }}. {{ category.name }} (
-        <a href="{% url 'catalog:category_detail' category.id %}">View</a> |
         <a href="{% url 'catalog:category_update' category.id %}">Update</a> |
         <a href="{% url 'catalog:category_delete' category.id %}">Delete</a>)
     </p>

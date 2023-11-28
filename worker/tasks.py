@@ -1,15 +1,13 @@
-import datetime
-import secrets
-
+from django.urls import reverse
 from django.utils import timezone
+from django.contrib.auth.models import User
 from django.db import connection
 from django.core.mail import send_mail
 
 from celery import shared_task
+from requests import post, request
 
 from practice1 import settings
-from user.models import MyUser
-from user.services import find_user_by_name
 
 BASE_URL = 'http://127.0.0.1:8000'
 
@@ -20,15 +18,20 @@ def fun(self):
     return "done"
 
 @shared_task(bind=True)
-def send_mail_func(self, username):
-    user = find_user_by_name(username)
-    make_hash_token(user)
+def send_mail_func(self, data):
+    # print(data)
+    token_create_data = {
+        'username': data['username'],
+        'password': data['password1']
+    }
+    authtoken = request(method='POST',url=BASE_URL+reverse('api_token'),data=token_create_data).json()
+    print('auth-token for mail', authtoken)
     mail_subject="Sign up"
     message=f"""HELLO!!!...\n
-    Hi user {user},\n
-    Please click in {BASE_URL + '/activate/' + str(user.signup_token)} to activate your account.\n
+    Hi user {data['username']},\n
+    Please click in {BASE_URL + '/activate/' + authtoken['token']} to activate your account.\n
     """
-    to_email=user.email
+    to_email=data['email']
     send_mail(
         subject=mail_subject,
         message=message,
@@ -39,20 +42,16 @@ def send_mail_func(self, username):
     
     return "Task Successfull"
 
-def make_hash_token(user):
-    user.signup_token = secrets.token_urlsafe(16)
-    user.signup_token_created = datetime.datetime.utcnow()
-    user.save()
-
 
 @shared_task(bind=True)
 def send_mail_to_admins_func(self):
     """Email for all Admins list Users signed up today"""
-    users = MyUser.objects.filter(is_staff=True)
+    users = User.objects.filter(is_staff=True)
     # User has date_joined default timezone.now
     # Solution: list all user has date_joined greater equal than today at 00:00:00
     today = timezone.now().replace(hour=0,minute=0,second=0,microsecond=0)
-    user_signed_up = MyUser.objects.filter(date_joined__gte=today)
+    user_signed_up = User.objects.filter(date_joined__gte=today)
+    # print("user", users)
     for user in users:
         mail_subject="List users sign up today"
         message="List users sign up today:\n"
@@ -71,7 +70,7 @@ def send_mail_to_admins_func(self):
 
 
 def send_mail_hc_fail(self):
-    users = MyUser.objects.filter(is_staff=True)
+    users = User.objects.filter(is_staff=True)
     for user in users:
         mail_subject="Health check fail"
         message="Health check fail\n"
