@@ -21,7 +21,7 @@ from .serializers import ProductSerializer, CategorySerializer
 
 class CategoryListApiView(generics.ListCreateAPIView):
     serializer_class = CategorySerializer
-    queryset = Category.objects.all().order_by('-id')
+    queryset = Category.objects.all().order_by('-id').select_related('parent')
     pagination_class = CustomPagination
     
     # 2. Create
@@ -40,7 +40,7 @@ class CategoryListApiView(generics.ListCreateAPIView):
     
 class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
-    queryset = Category.objects.all().order_by('-id')
+    queryset = Category.objects.all().order_by('-id').select_related('parent')
     
     def get(self, request, pk, *args, **kwargs):
         try: 
@@ -58,7 +58,7 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
             if 'name' not in request.data: 
                 return Response({"exception": "Missing name field"}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                if Category.objects.filter(name=request.data['name']).exists():
+                if category.name != request.data['name'] and Category.objects.filter(name=request.data['name']).exists():
                     raise ObjectWithNameExists(CategoryObject(), request.data['name'])
             
             if 'parent' not in request.data: 
@@ -81,7 +81,7 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
     def patch(self, request, pk, *args, **kwargs):
         try:
             category = find_category_by_id(pk)
-            if Category.objects.filter(name=request.data['name']).exists():
+            if category.name != request.data['name'] and Category.objects.filter(name=request.data['name']).exists():
                 raise ObjectWithNameExists(CategoryObject(), request.data['name'])
             if 'parent' in request.data:
                 find_category_by_id(request.data['parent'])
@@ -103,15 +103,14 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
             category = find_category_by_id(pk)
             category.delete()
             return Response(
-                {"message": "Category deleted!"},
                 status=status.HTTP_204_NO_CONTENT
             )
         except ExceptionNotFound as e:
             return e.return_404_response(e)
         
-class ProductListApiView(generics.ListAPIView):
+class ProductListApiView(generics.ListCreateAPIView):
     serializer_class = ProductSerializer
-    queryset = Product.objects.all().order_by('-id').prefetch_related('category')
+    queryset = Product.objects.order_by('-id').prefetch_related('category__parent')
     pagination = CustomPagination
     
     def post(self, request, *args, **kwargs):
@@ -136,9 +135,9 @@ class ProductListApiView(generics.ListAPIView):
         except ExceptionAlreadyExists as e:
             return e.return_400_response(e)
     
-class ProductDetailApiView(generics.ListAPIView):
+class ProductDetailApiView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
-    queryset = Product.objects.all().order_by('-id')
+    queryset = Product.objects.order_by('-id').prefetch_related('category__parent')
     
     def get(self, request, pk, *args, **kwargs):
         try:
@@ -156,7 +155,7 @@ class ProductDetailApiView(generics.ListAPIView):
             if 'name' not in request.data: 
                 return Response({"exception": "Missing name field"}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                if Product.objects.filter(name=request.data['name']).exists():
+                if product.name != request.data['name'] and Product.objects.filter(name=request.data['name']).exists():
                     raise ObjectWithNameExists(ProductObject(), request.data['name'])
             
             if 'category' in request.data:
@@ -180,7 +179,7 @@ class ProductDetailApiView(generics.ListAPIView):
     def patch(self, request, pk, *args, **kwargs):
         try: 
             product = find_product_by_id(pk)
-            if Product.objects.filter(name=request.data['name']).exists():
+            if product.name != request.data['name'] and Product.objects.filter(name=request.data['name']).exists():
                 raise ObjectWithNameExists(ProductObject(), request.data['name'])
             
             if 'category' in request.data:
