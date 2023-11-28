@@ -2,11 +2,16 @@ from ..models import Product, Category, ProductCategory
 from rest_framework import serializers
 
 class CategorySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=False)    
+    name = serializers.CharField(required=False) 
     
     class Meta:
         model = Category
         fields = '__all__'
+        
+    def get_fields(self):
+        fields = super(CategorySerializer, self).get_fields()
+        fields['parent'] = CategorySerializer(required=False)
+        return fields
                         
     def create(self, validated_data):
         category = Category.objects.create(name=validated_data['name'])

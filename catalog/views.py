@@ -4,12 +4,9 @@ from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFou
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.views import generic
 
-import requests
-
-from practice1.pagination import CustomPagination
-
-from .models import Category, Product, Comment, ProductCategory, ProductImage
+from .models import Category, Product, Comment, ProductImage
 from .forms import CommentForm, ImageForm, ProductForm, CategoryForm
 from .exceptions import ExceptionNotFound, ExceptionAlreadyExists
 from . import services
@@ -43,13 +40,9 @@ def create_category(request):
         return render(request, "category/category_form.html", { "form": form, })
     
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
     except ExceptionAlreadyExists as e:
-        return HttpResponseBadRequest(
-            content=e,
-        )
+        return e.return_400_http(e)
 
 # Retrieve a single category
 def retrieve_category(request, pk):
@@ -57,9 +50,7 @@ def retrieve_category(request, pk):
         category = services.find_category_by_id(pk)
         return render(request, "category/category_detail.html", { "category": category, })
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
 
 # Update a single category
 @login_required(login_url='/account/login/')
@@ -76,13 +67,9 @@ def update_category(request, pk):
 
         return render(request, "category/category_form.html", { "form": form, "object": category_obj})
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
     except ExceptionAlreadyExists as e:
-        return HttpResponseBadRequest(
-            content=e,
-        )
+        return e.return_400_http(e)
 # Delete a single category
 @login_required(login_url='/account/login/')
 def delete_category(request, pk):
@@ -91,9 +78,7 @@ def delete_category(request, pk):
         category_obj.delete()
         return redirect(reverse("catalog:category_list"))
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        e.return_404_http(e)
 
 # Retrieve product list
 def list_products(request):
@@ -108,9 +93,7 @@ def retrieve_product(request, pk):
         images = ProductImage.objects.select_related('product').filter(product=product)
         return render(request, "product/product_detail.html", { "product": product, 'images':images})
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
 
 # Create a product
 @login_required(login_url='/account/login/')
@@ -141,9 +124,7 @@ def update_product(request, pk):
         categories = Category.objects.all().order_by('name')
         return render(request, "product/product_form.html", { "form": form, "object": product, "categories": categories,})
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
 
 # Delete a single product
 @login_required(login_url='/account/login/')
@@ -153,9 +134,7 @@ def delete_product(request, pk):
         product.delete()
         return redirect(reverse("catalog:product_list"))
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
 
 # Product Image
 @login_required(login_url='/account/login/')
@@ -175,9 +154,7 @@ def upload_image(request, pk):
             form = ImageForm()
             return render(request, 'product_image/upload.html', {'form': form,})
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
         
 # Create comment
 @login_required(login_url='/account/login/')
@@ -195,9 +172,7 @@ def create_comment(request, pk):
             cf = CommentForm()
             return render(request, 'comment/comment_form.html', {'comment_form':cf, })
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
 
 # Comment list
 def list_comment(request, pk):
@@ -207,6 +182,4 @@ def list_comment(request, pk):
         page_obj = services.paginate_list(list=comments, page_number=request.GET.get("page"), page_size=DEFAULT_PAGE_SIZE)
         return render(request, "comment/comment_list.html", {"page_obj": page_obj, "product":product})
     except ExceptionNotFound as e:
-        return HttpResponseNotFound(
-            content=e,
-        )
+        return e.return_404_http(e)
