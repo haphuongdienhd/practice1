@@ -35,39 +35,28 @@ class Object(ABC):
     def __str__(self):
         return self.__class__.__name__
     
-class ProductObject(Object):
+class TokenObject(Object):
     pass
 
-class CategoryObject(Object):
+class UserObject(Object):
     pass
 
-class ProductCategoryObject(Object):
-    pass
-
-class ObjectNotFoundById(ExceptionNotFound):
+class ObjectNotFound(ExceptionNotFound):
     """Return 404 Message"""
-    def __init__(self, object: Object, id: int):
+    def __init__(self, object: Object, key: str, key_value):
         self.object = object
-        self.id = id
+        self.key = key
+        self.key_value = str(key_value)
 
     def __str__(self):
-        return f"{str(self.object)} with id {self.id} does not exist"
+        return f"{str(self.object)} with {self.key} {self.key_value} does not exist"  
     
-    
-class ObjectNotFoundByName(ExceptionNotFound):
+class ObjectWithKeyExists(ExceptionAlreadyExists):
     """Return 404 Message"""
-    def __init__(self, object: Object, name: str):
+    def __init__(self, object: Object, key: str, key_value):
         self.object = object
-        self.name = name
+        self.key = key
+        self.key_value = str(key_value)
 
     def __str__(self):
-        return f"{str(self.object)} with name {self.name} does not exist"
-    
-class ObjectWithNameExists(ExceptionAlreadyExists):
-    """Return 404 Message"""
-    def __init__(self, object: Object, name: str):
-        self.object = object
-        self.name = name
-
-    def __str__(self):
-        return f"{str(self.object)} with name {self.name} already exists"
+        return f"{str(self.object)} with {self.key} {self.key_value} already exists"

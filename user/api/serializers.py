@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.validators import UniqueValidator
 
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.models import User as MyUser
+from  user.models import MyUser
 # from user.models import MyUser
 
 #Serializer to Get User Details using Django Token Authentication

@@ -127,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# AUTH_USER_MODEL = 'user.MyUser'
+AUTH_USER_MODEL = 'user.MyUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -165,6 +165,8 @@ LOGOUT_REDIRECT_URL = "dashboard"
 # Base url to serve media files
 MEDIA_URL = '/media/'
 
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 # Path where media is stored'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -176,7 +178,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'user.authentication.ExpiringTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
