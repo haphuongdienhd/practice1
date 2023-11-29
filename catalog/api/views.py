@@ -69,13 +69,14 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
             serializer = CategorySerializer(instance=category,data=request.data,partial=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)            
+            raise DataError(serializer.errors)
         
         except ExceptionNotFound as e:
             return e.return_404_response(e)
         except ExceptionAlreadyExists as e:
+            return e.return_400_response(e)
+        except ExceptionInvalidData as e:
             return e.return_400_response(e)
     
     def patch(self, request, pk, *args, **kwargs):
@@ -91,11 +92,13 @@ class CategoryDetailApiView(generics.RetrieveUpdateDestroyAPIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise DataError(serializer.errors)
         
         except ExceptionNotFound as e:
             return e.return_404_response(e)
         except ExceptionAlreadyExists as e:
+            return e.return_400_response(e)
+        except ExceptionInvalidData as e:
             return e.return_400_response(e)
     
     def delete(self, request, pk, *args, **kwargs):
@@ -142,28 +145,30 @@ class ProductDetailApiView(generics.RetrieveUpdateDestroyAPIView):
         try:
             product = find_product_by_id(pk)
                 
-            if 'name' not in request.data: 
-                return Response({"exception": "Missing name field"}, status=status.HTTP_400_BAD_REQUEST)
-            else:
+            if 'name' in request.data:
                 if product.name != request.data['name'] and Product.objects.filter(name=request.data['name']).exists():
-                    raise ObjectWithNameExists(ProductObject(), request.data['name'])
+                    raise ObjectWithNameExists(ProductObject(), request.data['name'])                
+            else:
+                raise MissingField('name')
             
             if 'category' in request.data:
                 for category in request.data['category']:
                     find_category_by_name(category['name'])
             else:
-                return Response({"exception": "Missing category field"}, status=status.HTTP_400_BAD_REQUEST)
+                raise MissingField('category')
                     
             serializer = ProductSerializer(instance=product,data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise DataError(serializer.errors)
         
         except ExceptionNotFound as e:
             return e.return_404_response(e)
         except ExceptionAlreadyExists as e:
+            return e.return_400_response(e)
+        except ExceptionInvalidData as e:
             return e.return_400_response(e)
         
     def patch(self, request, pk, *args, **kwargs):
@@ -181,12 +186,15 @@ class ProductDetailApiView(generics.RetrieveUpdateDestroyAPIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise DataError(serializer.errors)
         
         except ExceptionNotFound as e:
             return e.return_404_response(e)
         
         except ExceptionAlreadyExists as e:
+            return e.return_400_response(e)
+        
+        except ExceptionInvalidData as e:
             return e.return_400_response(e)
     
     def delete(self, request, pk, *args, **kwargs):
