@@ -8,10 +8,10 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
         
-    def get_fields(self):
-        fields = super(CategorySerializer, self).get_fields()
-        fields['parent'] = CategorySerializer(required=False)
-        return fields
+    # def get_fields(self):
+    #     fields = super(CategorySerializer, self).get_fields()
+    #     fields['parent'] = CategorySerializer(required=False)
+    #     return fields
                         
     def create(self, validated_data):
         category = Category.objects.create(name=validated_data['name'])

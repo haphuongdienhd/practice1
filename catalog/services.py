@@ -49,6 +49,28 @@ def create_category(validate_data, **kwargs) -> Category:
     category.save()
     return category
 
+def create_product(validate_data, **kwargs) -> Product:
+    try:
+        print(validate_data)
+        name = validate_data['name']
+        if Product.objects.filter(name=name).exists():
+            raise ObjectWithNameExists(ProductObject(), name)
+                
+        product = Product.objects.create(name=name,**kwargs)
+        
+        if 'category' in validate_data:
+            for category in validate_data['category']:
+                product.category.add(find_category_by_name(category['name'])) if 'name' in category else product.category.add(find_category_by_id(category))
+        
+        product.save()
+        return product
+    except ExceptionAlreadyExists as e:
+        raise e
+    except Exception as e:
+        print("aosidpar", e)
+        product.delete()
+        raise e
+
 def paginate_list(list, page_number, page_size):
     """Return list object at page_number"""
     paginator = Paginator(list, page_size)
