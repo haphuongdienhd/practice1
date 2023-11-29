@@ -29,7 +29,7 @@ def register(request):
             user_signed_up_signal.send(sender=MyUser,data=userform.username)
             login(request, userform)
             return redirect(reverse("dashboard"))            
-        return HttpResponseNotFound("Invalid Information")
+        return HttpResponseNotFound(f"Invalid Information, {form.errors}")
     
             
 def activate(request, signup_token):
