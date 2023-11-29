@@ -7,5 +7,5 @@ class WorkerConfig(AppConfig):
     
     def ready(self):
         from .receivers import confirm_signup
-        from .signals import user_signed_up_signal
+        from user.signals import user_signed_up_signal
         user_signed_up_signal.connect(confirm_signup)

@@ -12,7 +12,7 @@
         <a href="{% url 'catalog:product_delete' product.id %}">Delete</a>
     </p>
     <p>
-        product Thumnail: <img src="{{product.thumnail.url}}" width="200" height=auto>
+        product Thumnail: {% if product.thumnail %}<img src="{{product.thumnail.url}}" width="200" height=auto>{% endif %}
     </p>
     <p>
         product Images:
