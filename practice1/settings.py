@@ -44,10 +44,13 @@ INSTALLED_APPS = [
 MY_APPS = [
     'user.apps.UserConfig',
     'catalog.apps.CatalogConfig',
-    'worker.apps.WorkerConfig'
+    'worker.apps.WorkerConfig',
+    'chat.apps.ChatConfig',
 ]
 
-EXTERNAL_APPS = [    
+EXTERNAL_APPS = [
+    'daphne',
+    'channels',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
@@ -58,7 +61,7 @@ EXTERNAL_APPS = [
     'health_checks',
 ]
 
-INSTALLED_APPS = MY_APPS + INSTALLED_APPS + EXTERNAL_APPS
+INSTALLED_APPS = EXTERNAL_APPS + MY_APPS + INSTALLED_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -93,6 +96,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'practice1.wsgi.application'
 
+ASGI_APPLICATION = 'practice1.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

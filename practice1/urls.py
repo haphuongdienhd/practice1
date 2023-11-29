@@ -40,7 +40,8 @@ schema_view = swagger_get_schema_view(
 urlpatterns = [
     
     re_path(r"^", include("user.urls"), name="user"),
-    path('catalog/', include('catalog.urls'), name="catalog"),    
+    path('catalog/', include('catalog.urls'), name="catalog"),
+    path('chat/', include('chat.urls'), name="chat"),
     re_path(r"^admin/", admin.site.urls),
     path('api/v1/', include(router.urls)),
     path('api/v1/', 
@@ -48,7 +49,6 @@ urlpatterns = [
             path('swagger/schema/', schema_view.with_ui('swagger', cache_timeout=0), name="swagger-schema"),
         ])
     ),
-    
 ]
 
 if settings.DEBUG:

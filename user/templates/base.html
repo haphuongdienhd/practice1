@@ -36,6 +36,7 @@
                 <ul class="sidebar-nav">
                     <li><a href="{% url 'catalog:product_list' %}">See Product</a></li>
                     <li><a href="{% url 'catalog:category_list' %}">See Category</a></li>
+                    <li><a href="{% url 'chat:chat_page' %}">Chat Channel</a></li>
                     {% if user.is_authenticated %}
                     <li><a href="{% url 'logout' %}">Logout</a></li>
                     {% else %}
