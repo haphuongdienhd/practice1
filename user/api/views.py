@@ -9,6 +9,7 @@ from ..services import (
     find_token_by_user_id,
     find_user_by_email,
     find_user_by_name,
+    token_expire,
 )
 from ..exceptions import *
 
@@ -46,46 +47,60 @@ class AuthTokenAPIView(generics.ListAPIView):
     queryset = MyUser.objects.all()
     
     def get(self, request, *args, **kwargs):
-        user_id = request.user.id        
-        if user_id:
-            token = find_token_by_user_id(user_id)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
-        
-        return Response(
-                    {"message": "UNAUTHORIZED."},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+        try:
+            user_id = request.user.id        
+            if user_id:
+                token = find_token_by_user_id(user_id)
+                if token_expire(token.created):
+                    return Response({'token': token.key}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'exception': 'token has expired, must create a new one'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            return Response(
+                        {"message": "UNAUTHORIZED."},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+            
+        except ExceptionNotFound as e:
+            return e.return_404_response(e)
         
     def post(self, request, *args, **kwargs):
-        user = find_user_by_name(request.data['username'])
-        if user.is_active:  
-            authuser = authenticate(username=request.data['username'], password=request.data['password'])
-            if authuser is not None:
-                token, created = Token.objects.get_or_create(user=authuser)
+        try:
+            user = find_user_by_name(request.data['username'])
+            if user.is_active:  
+                authuser = authenticate(username=request.data['username'], password=request.data['password'])
+                if authuser is not None:
+                    token, created = Token.objects.get_or_create(user=authuser)
+                    if not created:
+                    # update the created time of the token to keep it valid
+                        token.created = datetime.datetime.utcnow()
+                        token.save()
+                    return Response(
+                            {'token': token.key,
+                            'created': token.created},
+                            status=status.HTTP_201_CREATED
+                        )
+                
+                else:
+                    
+                    return Response(
+                            {'message': "Invalid username or password"},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            
+            else:            
+                token, created = Token.objects.get_or_create(user=user)
                 if not created:
-                # update the created time of the token to keep it valid
+                    # update the created time of the token to keep it valid
                     token.created = datetime.datetime.utcnow()
-                    token.save()
+                    token.save() 
                 return Response(
-                        {'token': token.key,
-                         'created': token.created},
+                        {'token': token.key},
                         status=status.HTTP_201_CREATED
                     )
             
-            else:
-                
-                return Response(
-                        {'message': "Invalid username or password"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+        except ExceptionNotFound as e:
+            return e.return_404_response(e)
         
-        else:            
-            token, created = Token.objects.get_or_create(user=user)
-            if not created:
-                # update the created time of the token to keep it valid
-                token.created = datetime.datetime.utcnow()
-                token.save() 
-            return Response(
-                    {'token': token.key},
-                    status=status.HTTP_201_CREATED
-                )
+        except ExceptionAlreadyExists as e:
+            return e.return_400_response(e)
