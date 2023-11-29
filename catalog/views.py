@@ -1,14 +1,13 @@
 # products/views.py
 
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
-from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseNotFound
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from django.views import generic
 
 from .models import Category, Product, Comment, ProductImage
 from .forms import CommentForm, ImageForm, ProductForm, CategoryForm
-from .exceptions import ExceptionNotFound, ExceptionAlreadyExists
+from .exceptions import *
 from . import services
 
 
@@ -30,10 +29,10 @@ def create_category(request):
         if request.method == "POST":
             
             if request.FILES:
-                services.create_category(validate_data=request.POST, image=request.FILES["image"])
+                category = services.create_category(validate_data=request.POST, image=request.FILES["image"])
             else:
-                services.create_category(validate_data=request.POST)
-            return redirect(reverse("catalog:category_list"))
+                category = services.create_category(validate_data=request.POST)
+            return redirect(reverse("catalog:category_detail", args=[category.pk,]))
         else:
             form = CategoryForm()
             
@@ -61,7 +60,8 @@ def update_category(request, pk):
             form = CategoryForm(request.POST,instance=category_obj, files=request.FILES)
             if form.is_valid():
                 form.save()
-            return redirect(reverse("catalog:category_detail", args=[pk,]))
+                return redirect(reverse("catalog:category_detail", args=[pk,]))
+            else: raise DataError(form.errors)
         else:
             form = CategoryForm(instance=category_obj)
 
@@ -69,6 +69,8 @@ def update_category(request, pk):
     except ExceptionNotFound as e:
         return e.return_404_http(e)
     except ExceptionAlreadyExists as e:
+        return e.return_400_http(e)
+    except ExceptionInvalidData as e:
         return e.return_400_http(e)
 # Delete a single category
 @login_required(login_url='/account/login/')
@@ -99,10 +101,11 @@ def retrieve_product(request, pk):
 @login_required(login_url='/account/login/')
 def create_product(request):    
     if request.method == "POST":        
-        form = ProductForm(data=request.POST, files=request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect(reverse("catalog:product_list"))
+        if request.FILES:
+            product = services.create_product(validate_data=request.POST, thumnail=request.FILES["thumnail"])
+        else:
+            product = services.create_product(validate_data=request.POST)
+        return redirect(reverse("catalog:product_detail", args=[product.pk,]))
     else:
         form = ProductForm()        
     categories = Category.objects.all().order_by('name')
@@ -118,13 +121,16 @@ def update_product(request, pk):
             if form.is_valid():
                 form.save()
                 return redirect(reverse("catalog:product_detail", args=[pk,]))
-            else: return HttpResponseNotFound(form.errors.as_data())
+            else:
+                raise DataError(form.errors)
         else:
             form = ProductForm(instance=product)    
         categories = Category.objects.all().order_by('name')
         return render(request, "product/product_form.html", { "form": form, "object": product, "categories": categories,})
     except ExceptionNotFound as e:
         return e.return_404_http(e)
+    except ExceptionInvalidData as e:
+        return e.return_400_http(e)
 
 # Delete a single product
 @login_required(login_url='/account/login/')

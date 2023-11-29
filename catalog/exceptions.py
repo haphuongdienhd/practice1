@@ -1,6 +1,6 @@
 from abc import ABC
 
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.http import HttpResponseBadRequest, HttpResponseNotFound
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -29,6 +29,17 @@ class ExceptionAlreadyExists(Exception):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+class ExceptionInvalidData(Exception):
+    def return_400_http(self, msg):
+        return HttpResponseBadRequest(
+            content=str(msg),
+        )
+    def return_400_response(self, msg):
+        "HTTP_400_BAD_REQUEST"
+        return Response(
+                {"exception": str(msg)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 class Object(ABC):
     # Return kind of object as string
@@ -71,3 +82,17 @@ class ObjectWithNameExists(ExceptionAlreadyExists):
 
     def __str__(self):
         return f"{str(self.object)} with name {self.name} already exists"
+    
+class MissingField(ExceptionInvalidData):
+    def __init__(self, field: str):
+        self.field = field
+        
+    def __str__(self):
+        return f"Missing {self.field} field"
+    
+class DataError(ExceptionInvalidData):
+    def __init__(self, error):
+        self.error = str(error)
+        
+    def __str__(self):
+        return f"{self.error}"
