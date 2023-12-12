@@ -1,12 +1,22 @@
 from ..models import Product, Category, ProductCategory
 from rest_framework import serializers
 
-class CategorySerializer(serializers.ModelSerializer):
+class LightCategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False) 
     
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ('id','name','image')
+
+class CategorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False) 
+    parent = serializers.SerializerMethodField()
+    class Meta:
+        model = Category
+        fields = ('id','name','parent','image')
+        
+    def get_parent(self, obj):
+        return LightCategorySerializer(instance=obj.parent).data if obj.parent else None
         
     # def get_fields(self):
     #     fields = super(CategorySerializer, self).get_fields()
