@@ -1,3 +1,4 @@
+from django.utils.html import format_html
 from django.contrib import admin
 from .models import Product, Category, ProductCategory, ProductImage, Comment
 # Register your models here.
@@ -15,7 +16,9 @@ class ProductCategoryInline(admin.TabularInline):
     raw_id_fields=('category',)    
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'thumnail', 'list_category', 'total_comment']
+    def image_tag(self, obj):
+        return format_html('<img src="{}" style="max-width:192px; max-height:108px"/>'.format(obj.thumnail.url)) if obj.thumnail else None
+    list_display = ['name', 'image_tag', 'list_category', 'total_comment']
     list_per_page = 10
     fieldsets = [
         ('Name', {'fields': ['name'],}),
@@ -49,7 +52,10 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ['product','image']
+    
+    def image_tag(self, obj):
+        return format_html('<img src="{}" style="max-width:192px; max-height:108px"/>'.format(obj.image.url))
+    list_display = ['product','image_tag']
     list_per_page = 10
     list_filter = ['product']
     search_fields = ['product__name']
